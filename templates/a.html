@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BALLI KİTAP</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+        }
+
+        h2 {
+            color: #333;
+            margin-top: 20px;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 5px;
+        }
+
+        form {
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+
+        input[type="text"],
+        input[type="date"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        input[type="submit"],
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        input[type="submit"]:hover,
+        button:hover {
+            background-color: #45a049;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            background: #fff;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+    <script>
+        async function addBook(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = {
+                KitapID: formData.get('KitapID'),
+                YazarID: formData.get('YazarID'),
+                KitapBasligi: formData.get('KitapBasligi'),
+                YayinTarihi: formData.get('YayinTarihi')
+            };
+
+            const response = await fetch('/book-add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            alert(result.Message || result.Error);
+        }
+
+        async function addAuthor(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = {
+                YazarID: formData.get('YazarID'),
+                YazarAdi: formData.get('YazarAdi')
+            };
+
+            const response = await fetch('/book-yazar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            alert(result.Message || result.Error);
+        }
+
+        async function fetchBooks() {
+            const response = await fetch('/books/getir');
+            const books = await response.json();
+            const bookList = document.getElementById('bookList');
+            bookList.innerHTML = '';
+
+            books.forEach(book => {
+                const li = document.createElement('li');
+                li.textContent = `${book.KitapBasligi} - ${book.YazarAdi} (${book.YayinTarihi})`;
+                bookList.appendChild(li);
+            });
+        }
+
+        async function updateBook(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = {
+                KitapID: formData.get('KitapID'),
+                YazarID: formData.get('YazarID'),
+                KitapBasligi: formData.get('KitapBasligi'),
+                YayinTarihi: formData.get('YayinTarihi')
+            };
+
+            const response = await fetch('/books-guncel', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            alert(result.Message || result.Error);
+        }
+
+        async function deleteBook(event) {
+            const kitapID = document.getElementById('deleteBookID').value;
+            const response = await fetch(`/books-sil/${kitapID}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+            alert(result.Message || result.Error);
+        }
+    </script>
+</head>
+
+<body>
+    <h1>Kitap Yönetimi</h1>
+
+    <h2>Yeni Kitap Ekle</h2>
+    <form onsubmit="addBook(event)">
+        <label for="kitap_id">Kitap ID:</label>
+        <input type="text" id="kitap_id" name="KitapID" required>
+
+        <label for="yazar_id">Yazar ID:</label>
+        <input type="text" id="yazar_id" name="YazarID" required>
+
+        <label for="kitap_basligi">Kitap Başlığı:</label>
+        <input type="text" id="kitap_basligi" name="KitapBasligi" required>
+
+        <label for="yayin_tarihi">Yayın Tarihi:</label>
+        <input type="date" id="yayin_tarihi" name="YayinTarihi" required>
+
+        <input type="submit" value="Kitap Ekle">
+    </form>
+
+    <h2>Yeni Yazar Ekle</h2>
+    <form onsubmit="addAuthor(event)">
+        <label for="yazar_id">Yazar ID:</label>
+        <input type="text" id="yazar_id" name="YazarID" required>
+
+        <label for="yazar_adi">Yazar Adı:</label>
+        <input type="text" id="yazar_adi" name="YazarAdi" required>
+
+        <input type="submit" value="Yazar Ekle">
+    </form>
+
+    <h2>Kitapları Görüntüle</h2>
+    <button onclick="fetchBooks()">Kitapları Getir</button>
+    <ul id="bookList"></ul>
+
+    <h2>Kitap Güncelle</h2>
+    <form onsubmit="updateBook(event)">
+        <label for="update_kitap_id">Güncellenecek Kitap ID:</label>
+        <input type="text" id="update_kitap_id" name="KitapID" required>
+
+        <label for="update_yazar_id">Yeni Yazar ID (opsiyonel):</label>
+        <input type="text" id="update_yazar_id" name="YazarID">
+
+        <label for="update_kitap_basligi">Yeni Kitap Başlığı (opsiyonel):</label>
+        <input type="text" id="update_kitap_basligi" name="KitapBasligi">
+
+        <label for="update_yayin_tarihi">Yeni Yayın Tarihi (opsiyonel):</label>
+        <input type="date" id="update_yayin_tarihi" name="YayinTarihi">
+
+        <input type="submit" value="Güncelle">
+    </form>
+
+    <h2>Kitap Sil</h2>
+    <label for="deleteBookID">Silinecek Kitap ID:</label>
+    <input type="text" id="deleteBookID" required>
+    <button onclick="deleteBook(event)">Sil</button>
+</body>
+
+</html>
